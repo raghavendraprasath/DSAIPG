@@ -50,7 +50,6 @@ class ThreeSumQuadrithmic implements ThreeSum {
         Collections.sort(triples);
         return triples.stream().distinct().toArray(Triple[]::new);
     }
-
     /**
      * Finds a "triple" consisting of three integers from the sorted array such that their sum equals zero,
      * given two indices representing the first two elements of the triple.
@@ -63,6 +62,11 @@ class ThreeSumQuadrithmic implements ThreeSum {
     Triple getTriple(int i, int j) {
         // TO BE IMPLEMENTED  : use binary search to find the third element
         // END SOLUTION
+        int target = -(a[i] + a[j]);
+        int k = Arrays.binarySearch(a, j + 1, length, target);
+        if (k > j) {
+            return new Triple(a[i], a[j], a[k]);
+        }
         return null;
     }
 
