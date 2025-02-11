@@ -65,8 +65,38 @@ public class Timer {
      */
     public <T, U> double repeat(int n, boolean warmup, Supplier<T> supplier, Function<T, U> function, UnaryOperator<T> preFunction, Consumer<U> postFunction) {
         // TO BE IMPLEMENTED : note that the timer is running when this method is called and should still be running when it returns.
-         return 0;
-        // END SOLUTION
+        if (warmup) {
+            for (int i = 0; i < 100; i++) {
+                T item = supplier.get();
+                if (preFunction != null) item = preFunction.apply(item);
+                function.apply(item);  // assuming result isn't needed during warmup
+            }
+        }
+
+        // Ensure the timer is running
+        if (!running) resume();
+
+        long totalTime = 0;
+        int effectiveLaps = 0;
+
+        for (int i = 0; i < n; i++) {
+            T item = supplier.get();
+            if (preFunction != null) item = preFunction.apply(item);
+
+            long startTime = getClock();
+            U result = function.apply(item);
+            long endTime = getClock();
+
+            if (postFunction != null) postFunction.accept(result);
+
+            totalTime += (endTime - startTime);
+            effectiveLaps++;
+            lap(); // Update lap count for each iteration
+        }
+
+        pause(); // Stop the timer
+        return effectiveLaps > 0 ? toMillisecs(totalTime) / effectiveLaps : 0;
+
     }
 
     /**
@@ -239,8 +269,8 @@ public class Timer {
      * @return the number of ticks for the system clock. Currently defined as nano time.
      */
     private static long getClock() {
-        // TO BE IMPLEMENTED 
-         return 0;
+        // TO BE IMPLEMENTED
+        return System.nanoTime();
         // END SOLUTION
     }
 
@@ -252,8 +282,8 @@ public class Timer {
      * @return the corresponding number of milliseconds.
      */
     private static double toMillisecs(long ticks) {
-        // TO BE IMPLEMENTED 
-         return 0;
+        // TO BE IMPLEMENTED
+        return ticks / 1_000_000.0;
         // END SOLUTION
     }
 
