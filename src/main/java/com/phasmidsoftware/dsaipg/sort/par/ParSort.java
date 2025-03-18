@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2024. Robin Hillyard
- */
-
 package com.phasmidsoftware.dsaipg.sort.par;
 
 import java.util.Arrays;
@@ -16,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
  * @author Ziyao Qiao. Thanks very much.
  */
 final class ParSort {
+
 
     /**
      * Specifies the cutoff value used to determine when to switch from parallel sorting
@@ -40,16 +37,32 @@ final class ParSort {
      */
     public static void sort(int[] array, int from, int to) {
         if (to - from >= cutoff) {
-            CompletableFuture<int[]> completableFuture1 = null;
-            CompletableFuture<int[]> completableFuture2 = null;
-            // TO BE IMPLEMENTED 
-            // END SOLUTION
+            int mid = from + (to - from) / 2;
+
+            CompletableFuture<int[]> completableFuture1 = CompletableFuture.supplyAsync(() -> {
+                return sortRecursive(array, from, mid);
+            });
+
+            CompletableFuture<int[]> completableFuture2 = CompletableFuture.supplyAsync(() -> {
+                return sortRecursive(array, mid, to);
+            });
+
             CompletableFuture<int[]> completableFuture = completableFuture1.thenCombine(completableFuture2, ParSort::doMerge);
-            completableFuture.whenComplete((result, throwable) -> System.arraycopy(result, 0, array, from, result.length));
+            completableFuture.whenComplete((result, throwable) -> {
+                if (throwable != null) {
+                    throwable.printStackTrace();
+                } else {
+                    System.arraycopy(result, 0, array, from, result.length);
+                }
+            });
+
+
             completableFuture.join();
-        } else
+        } else {
             Arrays.sort(array, from, to);
+        }
     }
+
 
     /**
      * Recursively sorts a specified portion of the input array and returns a new sorted array.
@@ -63,9 +76,8 @@ final class ParSort {
      */
     static int[] sortRecursive(int[] array, int from, int to) {
         int[] result = new int[to - from];
-        // TO BE IMPLEMENTED 
-         // NOTE you need to do something here so that result is the sorted version of array.
-        // END SOLUTION
+        System.arraycopy(array, from, result, 0, result.length);
+        Arrays.sort(result);
         return result;
     }
 
@@ -88,6 +100,7 @@ final class ParSort {
             else if (xs2[j] < xs1[i]) result[k] = xs2[j++];
             else result[k] = xs1[i++];
         }
+
         return result;
     }
 
@@ -95,7 +108,6 @@ final class ParSort {
      * Asynchronously sorts the specified portion of the input array using a parallel sorting algorithm.
      * This method extracts a subsection of the given array, sorts it, and returns a CompletableFuture
      * containing the sorted portion of the array.
-     *
      * @param array the input array to extract and sort
      * @param from  the starting index (inclusive) of the portion of the array to be sorted
      * @param to    the ending index (exclusive) of the portion of the array to be sorted
